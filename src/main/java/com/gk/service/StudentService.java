@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ public class StudentService {
 
     // Basic Student Operations
     public Student createStudent(Student student) {
+
         return studentRepository.save(student);
     }
 
@@ -48,10 +50,21 @@ public class StudentService {
     public Student updateStudent(Long id, Student studentDetails) {
         Student student = getStudentById(id);
         student.setName(studentDetails.getName());
-        student.setAge(studentDetails.getAge());
         student.setEmail(studentDetails.getEmail());
         student.setPhoneNumber(studentDetails.getPhoneNumber());
         student.setGrade(studentDetails.getGrade());
+        student.setAddress(studentDetails.getAddress());
+        student.setDateOfBirth(studentDetails.getDateOfBirth());
+        student.setParentEmail(studentDetails.getParentEmail());
+        student.setParentPhone(studentDetails.getParentPhone());
+        student.setBloodGroup(studentDetails.getBloodGroup());
+        student.setEmergencyContact(studentDetails.getEmergencyContact());
+        student.setAdmissionDate(studentDetails.getAdmissionDate());
+        student.setSection(studentDetails.getSection());
+        student.setParentName(studentDetails.getParentName());
+        student.setParentOccupation(studentDetails.getParentOccupation());
+        student.setAnnualIncome(studentDetails.getAnnualIncome());
+
         return studentRepository.save(student);
     }
 
@@ -89,9 +102,10 @@ public class StudentService {
 
     public List<Student> getTopPerformers(int limit) {
         return studentRepository.findAll().stream()
+                .peek(student -> student.setAverageScore(calculateAverageMarks(student.getId())))
                 .sorted((s1, s2) -> Double.compare(
-                        calculateAverageMarks(s2.getId()),
-                        calculateAverageMarks(s1.getId())
+                        s2.getAverageScore(),
+                        s1.getAverageScore()
                 ))
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -198,7 +212,7 @@ public class StudentService {
         summary.put("totalFees", calculateTotalFees(studentId));
         summary.put("paidAmount", calculatePaidAmount(studentId));
         summary.put("dueAmount", calculateDueAmount(studentId));
-        summary.put("nextDueDate", getNextDueDate(studentId));
+        summary.put("nextDueDate", LocalDate.now().plusMonths(1));
         summary.put("paymentHistory", getPaymentHistory(studentId));
         return summary;
     }
@@ -288,6 +302,15 @@ public class StudentService {
         } else if (dateObj instanceof LocalDateTime) {
             LocalDateTime ldt = (LocalDateTime) dateObj;
             return Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        }
+        throw new IllegalArgumentException("Unsupported date type: " + dateObj.getClass());
+    }
+
+    private Object convertToDateOrLocalDateTime(Object dateObj) {
+        if (dateObj instanceof Date) {
+            return dateObj;
+        } else if (dateObj instanceof LocalDateTime dateTime) {
+            return Date.from(dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant());
         }
         throw new IllegalArgumentException("Unsupported date type: " + dateObj.getClass());
     }

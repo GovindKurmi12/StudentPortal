@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,8 +53,8 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
-                    FieldError::getField,
-                    error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
+                        FieldError::getField,
+                        error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
                 ));
 
         Map<String, Object> response = new HashMap<>();
@@ -71,8 +72,8 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = ex.getConstraintViolations()
                 .stream()
                 .collect(Collectors.toMap(
-                    violation -> violation.getPropertyPath().toString(),
-                    violation -> violation.getMessage()
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage()
                 ));
 
         Map<String, Object> response = new HashMap<>();
@@ -90,8 +91,8 @@ public class GlobalExceptionHandler {
         Map<String, String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
-                    FieldError::getField,
-                    error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
+                        FieldError::getField,
+                        error -> error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value"
                 ));
 
         Map<String, Object> response = new HashMap<>();
@@ -119,8 +120,8 @@ public class GlobalExceptionHandler {
     private boolean isApiRequest(HttpServletRequest request) {
         String path = request.getRequestURI();
         return path.startsWith("/api/") ||
-               request.getHeader("Accept") != null &&
-               request.getHeader("Accept").contains("application/json");
+                request.getHeader("Accept") != null &&
+                        request.getHeader("Accept").contains("application/json");
     }
 
     private ModelAndView createErrorModelAndView(String message, HttpServletRequest request, HttpStatus status) {
@@ -140,5 +141,23 @@ public class GlobalExceptionHandler {
         response.put("error", status.getReasonPhrase());
         response.put("message", message);
         return new ResponseEntity<>(response, status);
+    }
+
+    @ExceptionHandler(GlobalExceptionHandler.NotFoundException.class)
+    public String handleNotFoundException(GlobalExceptionHandler.NotFoundException e, Model model) {
+        model.addAttribute("error", e.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(Exception.class)
+    public String handleGeneralError(Exception e, Model model) {
+        model.addAttribute("error", "An unexpected error occurred: " + e.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public String handleError(RuntimeException e, Model model) {
+        model.addAttribute("error", e.getMessage());
+        return "error";
     }
 }

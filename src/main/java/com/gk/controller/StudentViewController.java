@@ -23,7 +23,6 @@ import java.util.Map;
 public class StudentViewController {
     private final StudentService studentService;
 
-    @Autowired
     public StudentViewController(StudentService studentService) {
         this.studentService = studentService;
     }
@@ -238,12 +237,5 @@ public class StudentViewController {
         headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
         headers.setContentDispositionFormData("filename", "students.xlsx");
         return ResponseEntity.ok().headers(headers).body(data);
-    }
-
-    // Error Handling
-    @ExceptionHandler(RuntimeException.class)
-    public String handleError(RuntimeException e, Model model) {
-        model.addAttribute("error", e.getMessage());
-        return "error";
     }
 }

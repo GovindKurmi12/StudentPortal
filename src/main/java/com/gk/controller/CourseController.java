@@ -3,7 +3,6 @@ package com.gk.controller;
 import com.gk.model.Course;
 import com.gk.service.CourseService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,8 +13,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/courses")
 public class CourseController {
 
-    @Autowired
-    private CourseService courseService;
+    private final CourseService courseService;
+
+    public CourseController(CourseService courseService) {
+        this.courseService = courseService;
+    }
 
     @GetMapping
     public String listCourses(Model model) {
@@ -31,8 +33,8 @@ public class CourseController {
 
     @PostMapping("/save")
     public String saveCourse(@Valid @ModelAttribute Course course,
-                           BindingResult result,
-                           RedirectAttributes redirectAttributes) {
+                             BindingResult result,
+                             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "courses/form";
         }
@@ -96,8 +98,8 @@ public class CourseController {
 
     @PostMapping("/{courseId}/enroll/{studentId}")
     public String enrollStudent(@PathVariable Long courseId,
-                              @PathVariable Long studentId,
-                              RedirectAttributes redirectAttributes) {
+                                @PathVariable Long studentId,
+                                RedirectAttributes redirectAttributes) {
         try {
             courseService.enrollStudent(courseId, studentId);
             redirectAttributes.addFlashAttribute("message", "Student enrolled successfully!");
@@ -109,8 +111,8 @@ public class CourseController {
 
     @PostMapping("/{courseId}/unenroll/{studentId}")
     public String unenrollStudent(@PathVariable Long courseId,
-                                @PathVariable Long studentId,
-                                RedirectAttributes redirectAttributes) {
+                                  @PathVariable Long studentId,
+                                  RedirectAttributes redirectAttributes) {
         try {
             courseService.unenrollStudent(courseId, studentId);
             redirectAttributes.addFlashAttribute("message", "Student unenrolled successfully!");
@@ -141,9 +143,9 @@ public class CourseController {
 
     @PostMapping("/{id}/schedule/add")
     public String addSchedule(@PathVariable Long id,
-                            @Valid @ModelAttribute Course.Schedule schedule,
-                            BindingResult result,
-                            RedirectAttributes redirectAttributes) {
+                              @Valid @ModelAttribute Course.Schedule schedule,
+                              BindingResult result,
+                              RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("error", "Invalid schedule data");
             return "redirect:/courses/" + id + "/schedule";
@@ -160,8 +162,8 @@ public class CourseController {
 
     @PostMapping("/{courseId}/schedule/{index}/delete")
     public String deleteSchedule(@PathVariable Long courseId,
-                               @PathVariable int index,
-                               RedirectAttributes redirectAttributes) {
+                                 @PathVariable int index,
+                                 RedirectAttributes redirectAttributes) {
         try {
             courseService.removeSchedule(courseId, index);
             redirectAttributes.addFlashAttribute("message", "Schedule removed successfully!");
@@ -176,18 +178,5 @@ public class CourseController {
         model.addAttribute("courses", courseService.findByInstructor(instructor));
         model.addAttribute("instructor", instructor);
         return "courses/list";
-    }
-
-    // Additional validation and error handling
-    @ExceptionHandler(GlobalExceptionHandler.NotFoundException.class)
-    public String handleNotFoundException(GlobalExceptionHandler.NotFoundException e, Model model) {
-        model.addAttribute("error", e.getMessage());
-        return "error";
-    }
-
-    @ExceptionHandler(Exception.class)
-    public String handleGeneralError(Exception e, Model model) {
-        model.addAttribute("error", "An unexpected error occurred: " + e.getMessage());
-        return "error";
     }
 }

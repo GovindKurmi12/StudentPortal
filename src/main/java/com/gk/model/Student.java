@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Entity
@@ -44,8 +45,7 @@ public class Student {
     private String address;
 
     @Past(message = "Date of birth must be in the past")
-    @Temporal(TemporalType.DATE)
-    private java.util.Date dateOfBirth;
+    private LocalDate dateOfBirth;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttendanceRecord> attendanceRecords = new ArrayList<>();
@@ -73,12 +73,10 @@ public class Student {
 
     private String bloodGroup;
 
-    @NotBlank(message = "Emergency contact is required")
     private String emergencyContact;
 
     @Column(name = "admission_date")
-    @Temporal(TemporalType.DATE)
-    private Date admissionDate;
+    private LocalDate admissionDate;
 
     @Column(name = "registration_number", unique = true)
     private String registrationNumber;
@@ -99,6 +97,9 @@ public class Student {
 
     @Column(name = "attendance_percentage")
     private Double attendancePercentage;
+
+    @Column(name = "average_score")
+    private Double averageScore;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "last_modified_date")
@@ -218,7 +219,7 @@ public class Student {
     @PrePersist
     protected void onCreate() {
         if (admissionDate == null) {
-            admissionDate = new Date();
+            admissionDate = LocalDate.now();
         }
         lastModifiedDate = new Date();
     }
@@ -252,14 +253,7 @@ public class Student {
         if (dateOfBirth == null) {
             return age;
         }
-        Calendar dob = Calendar.getInstance();
-        dob.setTime(dateOfBirth);
-        Calendar today = Calendar.getInstance();
-        int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
-        if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
-            age--;
-        }
-        return age;
+        return (int) java.time.temporal.ChronoUnit.YEARS.between(dateOfBirth, LocalDate.now());
     }
 
     public void setAge(int age) {
@@ -370,11 +364,11 @@ public class Student {
         this.address = address;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -402,11 +396,11 @@ public class Student {
         this.emergencyContact = emergencyContact;
     }
 
-    public Date getAdmissionDate() {
+    public LocalDate getAdmissionDate() {
         return admissionDate;
     }
 
-    public void setAdmissionDate(Date admissionDate) {
+    public void setAdmissionDate(LocalDate admissionDate) {
         this.admissionDate = admissionDate;
     }
 
@@ -464,6 +458,20 @@ public class Student {
 
     public void setAttendancePercentage(Double attendancePercentage) {
         this.attendancePercentage = attendancePercentage;
+    }
+
+    public Double getAverageScore() {
+        if (marks == null || marks.isEmpty()) {
+            return 0.0;
+        }
+        return marks.stream()
+                .mapToDouble(SubjectMark::getMarks)
+                .average()
+                .orElse(0.0);
+    }
+
+    public void setAverageScore(Double averageScore) {
+        this.averageScore = averageScore;
     }
 
     public Date getLastModifiedDate() {

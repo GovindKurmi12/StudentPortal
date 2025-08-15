@@ -34,7 +34,7 @@ public class StudentController {
     @PostMapping("/save")
     public String createStudent(@Valid Student student) {
         studentService.createStudent(student);
-        return "redirect:/api/students"; // Redirect to the student list page after saving
+        return "redirect:/students/dashboard"; // Redirect to the student list page after saving
     }
 
     @GetMapping("/new")
