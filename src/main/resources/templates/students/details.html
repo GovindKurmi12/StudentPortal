@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Student Details</h3>
+                <div>
+                    <a th:href="@{/students/{id}/edit(id=${student.id})}" class="btn btn-warning">Edit</a>
+                    <a href="/students/list" class="btn btn-secondary">Back to List</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Personal Information</h4>
+                        <table class="table">
+                            <tr>
+                                <th>Name:</th>
+                                <td th:text="${student.name}"></td>
+                            </tr>
+                            <tr>
+                                <th>Age:</th>
+                                <td th:text="${student.age}"></td>
+                            </tr>
+                            <tr>
+                                <th>Date of Birth:</th>
+                                <td th:text="${#dates.format(student.dateOfBirth, 'dd-MM-yyyy')}"></td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td th:text="${student.email}"></td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td th:text="${student.phoneNumber}"></td>
+                            </tr>
+                            <tr>
+                                <th>Address:</th>
+                                <td th:text="${student.address}"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Academic Information</h4>
+                        <table class="table">
+                            <tr>
+                                <th>Grade:</th>
+                                <td th:text="${student.grade}"></td>
+                            </tr>
+                            <tr>
+                                <th>Attendance:</th>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar"
+                                             th:style="'width: ' + ${student.attendance} + '%'"
+                                             th:text="${student.attendance} + '%'">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mt-4">Subject Marks</h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Marks</th>
+                                    <th>Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="mark : ${student.marks}">
+                                    <td th:text="${mark.subject}"></td>
+                                    <td th:text="${mark.marks}"></td>
+                                    <td th:text="${mark.grade}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

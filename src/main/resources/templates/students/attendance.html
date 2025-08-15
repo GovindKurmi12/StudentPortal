@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Attendance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Attendance Tracking</h3>
+                <div>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
+                        <i class="fas fa-user-check"></i> Mark Attendance
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Date Range Filter -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" id="dateRange" class="form-control" placeholder="Select date range">
+                            <button class="btn btn-outline-secondary" type="button" id="filterBtn">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>Marked By</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="record : ${attendanceRecords}">
+                                <td th:text="${#dates.format(record.date, 'dd-MM-yyyy')}"></td>
+                                <td th:text="${record.student.name}"></td>
+                                <td>
+                                    <span th:class="${record.status == 'PRESENT' ? 'badge bg-success' : 'badge bg-danger'}"
+                                          th:text="${record.status}"></span>
+                                </td>
+                                <td th:text="${record.markedBy}"></td>
+                                <td th:text="${record.notes}"></td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm"
+                                            th:onclick="'editAttendance(' + ${record.id} + ')'">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5>Present Today</h5>
+                                <h3 th:text="${presentToday}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h5>Absent Today</h5>
+                                <h3 th:text="${absentToday}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5>Monthly Attendance</h5>
+                                <h3 th:text="${monthlyAttendance + '%'}">0%</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5>Total Students</h5>
+                                <h3 th:text="${totalStudents}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark Attendance Modal -->
+    <div class="modal fade" id="markAttendanceModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="attendanceForm" th:action="@{/students/attendance/mark}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Status</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="student : ${students}">
+                                        <td th:text="${student.name}">
+                                            <input type="hidden" name="studentIds" th:value="${student.id}">
+                                        </td>
+                                        <td>
+                                            <select class="form-select" name="statuses" required>
+                                                <option value="PRESENT">Present</option>
+                                                <option value="ABSENT">Absent</option>
+                                                <option value="LATE">Late</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" name="notes" placeholder="Optional notes">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="attendanceForm" class="btn btn-primary">Save Attendance</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Initialize date range picker
+        flatpickr("#dateRange", {
+            mode: "range",
+            dateFormat: "Y-m-d"
+        });
+
+        // Filter button click handler
+        document.getElementById('filterBtn').addEventListener('click', function() {
+            const dateRange = document.getElementById('dateRange').value;
+            if (dateRange) {
+                window.location.href = `/students/attendance?dateRange=${dateRange}`;
+            }
+        });
+
+        function editAttendance(recordId) {
+            // Implementation for editing attendance
+        }
+    </script>
+</body>
+</html>

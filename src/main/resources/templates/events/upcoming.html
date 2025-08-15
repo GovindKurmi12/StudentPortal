@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Upcoming Events</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div th:replace="fragments/navigation :: navigation"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Upcoming Events</h2>
+                    <a href="/events/create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Event
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div th:if="${upcomingEvents.isEmpty()}" class="alert alert-info">
+                            No upcoming events scheduled.
+                        </div>
+
+                        <div th:unless="${upcomingEvents.isEmpty()}" class="list-group">
+                            <div th:each="event : ${upcomingEvents}"
+                                 class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1" th:text="${event.eventName}">Event Name</h5>
+                                    <small th:text="${#temporals.format(event.eventDate, 'dd MMM yyyy HH:mm')}">
+                                        Date
+                                    </small>
+                                </div>
+                                <p class="mb-1" th:text="${event.description}">Description</p>
+                                <small>
+                                    <span class="badge badge-info" th:text="${event.eventType}">Type</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

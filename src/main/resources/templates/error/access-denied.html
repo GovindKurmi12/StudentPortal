@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Access Denied</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .error-container {
+            max-width: 600px;
+            margin: 100px auto;
+            text-align: center;
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container error-container">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <i class="fas fa-exclamation-circle error-icon"></i>
+                <h2 class="text-danger mb-4">Access Denied</h2>
+                <p class="lead mb-4">Sorry, you don't have permission to access this page.</p>
+                <p class="text-muted mb-4">Please contact your administrator if you believe this is an error.</p>
+                <div>
+                    <a href="/students/dashboard" class="btn btn-primary me-2">
+                        <i class="fas fa-home"></i> Go to Dashboard
+                    </a>
+                    <button onclick="history.back()" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

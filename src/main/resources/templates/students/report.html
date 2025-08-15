@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .report-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .progress {
+            height: 20px;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row mb-4 no-print">
+            <div class="col">
+                <h2>Student Progress Report</h2>
+            </div>
+            <div class="col-auto">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Report
+                </button>
+                <button onclick="exportPDF()" class="btn btn-secondary">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <!-- Student Information -->
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 th:text="${student.name}"></h3>
+                    <p>
+                        <strong>Grade:</strong> <span th:text="${student.grade}"></span><br>
+                        <strong>Roll Number:</strong> <span th:text="${student.id}"></span><br>
+                        <strong>Email:</strong> <span th:text="${student.email}"></span>
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>
+                        <strong>Report Period:</strong> <span th:text="${reportPeriod}"></span><br>
+                        <strong>Generated Date:</strong> <span th:text="${#dates.format(#dates.createNow(), 'dd-MM-yyyy')}"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Academic Performance -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h4>Academic Performance</h4>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Marks</th>
+                                <th>Grade</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="mark : ${student.marks}">
+                                <td th:text="${mark.subject}"></td>
+                                <td th:text="${mark.marks}"></td>
+                                <td th:text="${mark.grade}"></td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar"
+                                             th:style="'width: ' + ${mark.marks} + '%'"
+                                             th:text="${mark.marks} + '%'">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attendance Summary -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h4>Attendance Summary</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="progress mb-3">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width: ' + ${student.attendance} + '%'"
+                                     th:text="${student.attendance} + '%'">
+                                </div>
+                            </div>
+                            <p>
+                                <strong>Total Classes:</strong> <span th:text="${totalClasses}"></span><br>
+                                <strong>Classes Attended:</strong> <span th:text="${classesAttended}"></span><br>
+                                <strong>Classes Missed:</strong> <span th:text="${classesMissed}"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Course Progress</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <ul class="list-group">
+                                <li class="list-group-item" th:each="course : ${student.courses}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span th:text="${course.name}"></span>
+                                        <span class="badge bg-primary" th:text="${course.credits + ' Credits'}"></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher's Comments -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h4>Teacher's Comments</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <p th:text="${teacherComments}">No comments available.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Areas for Improvement -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h4>Areas for Improvement</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <ul>
+                                <li th:each="improvement : ${improvements}" th:text="${improvement}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent's Signature -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <p>
+                        <strong>Class Teacher's Signature</strong><br>
+                        _______________________
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>
+                        <strong>Parent's Signature</strong><br>
+                        _______________________
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function exportPDF() {
+            const element = document.querySelector('.report-card');
+            const opt = {
+                margin: 1,
+                filename: 'student-report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>

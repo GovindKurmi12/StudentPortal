@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Event</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <div th:replace="fragments/navigation :: navigation"></div>
+
+    <div class="container mt-4">
+        <h2>Create New Event</h2>
+        <form th:action="@{/events/save}" method="post" class="needs-validation" novalidate>
+            <div class="form-group">
+                <label for="studentId">Student</label>
+                <select class="form-control" id="studentId" name="studentId" required>
+                    <option value="">Select Student</option>
+                    <option th:each="student : ${students}"
+                            th:value="${student.id}"
+                            th:text="${student.name}">
+                    </option>
+                </select>
+                <div class="invalid-feedback">Please select a student</div>
+            </div>
+
+            <div class="form-group">
+                <label for="eventName">Event Name</label>
+                <input type="text" class="form-control" id="eventName"
+                       name="eventName" required>
+                <div class="invalid-feedback">Please enter an event name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="eventDate">Event Date & Time</label>
+                <input type="text" class="form-control" id="eventDate"
+                       name="eventDate" required>
+                <div class="invalid-feedback">Please select a date and time</div>
+            </div>
+
+            <div class="form-group">
+                <label for="eventType">Event Type</label>
+                <select class="form-control" id="eventType" name="eventType" required>
+                    <option value="">Select Event Type</option>
+                    <option th:each="type : ${eventTypes}"
+                            th:value="${type}"
+                            th:text="${type}">
+                    </option>
+                </select>
+                <div class="invalid-feedback">Please select an event type</div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description"
+                          name="description" rows="3" required></textarea>
+                <div class="invalid-feedback">Please provide a description</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Event</button>
+            <a th:href="@{/events/calendar}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Initialize datetime picker
+        flatpickr("#eventDate", {
+            enableTime: true,
+            dateFormat: "Y-m-d\\TH:i:S",
+            time_24hr: true,
+            minDate: "today"
+        });
+
+        // Form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    </script>
+</body>
+</html>

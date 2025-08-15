@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Parent Communication Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Student Overview -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Student Overview</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-user-graduate fa-3x me-3"></i>
+                            <div>
+                                <h5 th:text="${student.name}"></h5>
+                                <p class="mb-0" th:text="${student.grade + ' Grade'}"></p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="mb-2">
+                            <strong>Roll Number:</strong> <span th:text="${student.id}"></span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Attendance:</strong>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width: ' + ${student.attendance} + '%'"
+                                     th:text="${student.attendance} + '%'">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Average Grade:</strong>
+                            <span th:text="${averageGrade}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Updates -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Recent Updates</h4>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sendMessageModal">
+                            <i class="fas fa-envelope"></i> Send Message
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item" th:each="update : ${recentUpdates}">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 th:text="${update.title}"></h6>
+                                            <small th:text="${#dates.format(update.date, 'dd-MM-yyyy')}"></small>
+                                        </div>
+                                        <p th:text="${update.description}"></p>
+                                        <span class="badge" th:classappend="${update.type == 'ACADEMIC' ? 'bg-primary' : 'bg-warning'}"
+                                              th:text="${update.type}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Academic Progress -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Academic Progress</h4>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="academicChart"></canvas>
+                        <hr>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Recent Score</th>
+                                        <th>Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="mark : ${student.marks}">
+                                        <td th:text="${mark.subject}"></td>
+                                        <td th:text="${mark.marks}"></td>
+                                        <td>
+                                            <i class="fas fa-arrow-up text-success"
+                                               th:if="${mark.marks >= 75}"></i>
+                                            <i class="fas fa-arrow-down text-danger"
+                                               th:if="${mark.marks < 75}"></i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Events -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Upcoming Events</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <div th:each="event : ${upcomingEvents}"
+                                 class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1" th:text="${event.eventName}"></h6>
+                                    <small th:text="${#dates.format(event.eventDate, 'dd MMM')}"></small>
+                                </div>
+                                <p class="mb-1" th:text="${event.description}"></p>
+                                <small th:text="${event.eventType}"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Message Modal -->
+    <div class="modal fade" id="sendMessageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Message to Teachers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="messageForm" th:action="@{/students/{id}/message(id=${student.id})}" method="post">
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="messageForm" class="btn btn-primary">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        // Academic Progress Chart
+        const ctx = document.getElementById('academicChart').getContext('2d');
+        const academicData = /*[[${academicProgressData}]]*/ {};
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(academicData),
+                datasets: [{
+                    label: 'Academic Progress',
+                    data: Object.values(academicData),
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

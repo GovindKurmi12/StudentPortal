@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Student Marks</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h3>Manage Marks - <span th:text="${student.name}"></span></h3>
+            </div>
+            <div class="card-body">
+                <!-- Current Marks -->
+                <div class="mb-4">
+                    <h4>Current Marks</h4>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Marks</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="mark : ${student.marks}">
+                                <td th:text="${mark.subject}"></td>
+                                <td th:text="${mark.marks}"></td>
+                                <td th:text="${mark.grade}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add New Mark -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add New Mark</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/students/{id}/marks(id=${student.id})}"
+                              th:object="${newMark}" method="post">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="subject" class="form-label">Subject</label>
+                                        <select class="form-select" id="subject" th:field="*{subject}" required>
+                                            <option value="">Select Subject</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Physics">Physics</option>
+                                            <option value="Chemistry">Chemistry</option>
+                                            <option value="Biology">Biology</option>
+                                            <option value="English">English</option>
+                                            <option value="Computer Science">Computer Science</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="marks" class="form-label">Marks</label>
+                                        <input type="number" class="form-control" id="marks"
+                                               th:field="*{marks}" min="0" max="100" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary d-block">Add Mark</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="mt-4">
+                    <h4>Statistics</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Average Score</h5>
+                                    <p class="card-text" th:with="avg=${@studentService.calculateAverageMarks(student.id)}">
+                                        <span th:text="${#numbers.formatDecimal(avg, 1, 1)}"></span>%
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a th:href="@{/students/{id}(id=${student.id})}" class="btn btn-secondary">Back to Student Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

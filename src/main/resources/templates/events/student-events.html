@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Events</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div th:replace="fragments/navigation :: navigation"></div>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Events for <span th:text="${student.firstName + ' ' + student.lastName}"></span></h2>
+            <a th:href="@{/events/create}" class="btn btn-primary">Add New Event</a>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div th:if="${events.isEmpty()}" class="alert alert-info">
+                            No events found for this student.
+                        </div>
+
+                        <div th:unless="${events.isEmpty()}">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Event Name</th>
+                                            <th>Date</th>
+                                            <th>Type</th>
+                                            <th>Description</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="event : ${events}">
+                                            <td th:text="${event.eventName}"></td>
+                                            <td th:text="${#temporals.format(event.eventDate, 'dd MMM yyyy HH:mm')}"></td>
+                                            <td th:text="${event.eventType}"></td>
+                                            <td th:text="${event.description}"></td>
+                                            <td>
+                                                <button class="btn btn-danger btn-sm delete-event"
+                                                        th:data-student-id="${student.id}"
+                                                        th:data-event-id="${event.id}">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.delete-event').click(function() {
+                if (confirm('Are you sure you want to delete this event?')) {
+                    var studentId = $(this).data('student-id');
+                    var eventId = $(this).data('event-id');
+                    var button = $(this);
+
+                    $.ajax({
+                        url: '/events/' + studentId + '/events/' + eventId,
+                        type: 'DELETE',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                button.closest('tr').remove();
+                                if ($('tbody tr').length === 0) {
+                                    location.reload();
+                                }
+                            }
+                        },
+                        error: function() {
+                            alert('Error deleting event. Please try again.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
