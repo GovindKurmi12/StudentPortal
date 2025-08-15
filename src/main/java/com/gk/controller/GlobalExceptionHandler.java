@@ -1,10 +1,10 @@
 package com.gk.controller;
 
+import com.gk.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -103,19 +103,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // Custom exceptions
-    public static class NotFoundException extends RuntimeException {
-        public NotFoundException(String message) {
-            super(message);
-        }
-    }
-
-    public static class ValidationException extends RuntimeException {
-        public ValidationException(String message) {
-            super(message);
-        }
-    }
-
     // Helper methods
     private boolean isApiRequest(HttpServletRequest request) {
         String path = request.getRequestURI();
@@ -141,23 +128,5 @@ public class GlobalExceptionHandler {
         response.put("error", status.getReasonPhrase());
         response.put("message", message);
         return new ResponseEntity<>(response, status);
-    }
-
-    @ExceptionHandler(GlobalExceptionHandler.NotFoundException.class)
-    public String handleNotFoundException(GlobalExceptionHandler.NotFoundException e, Model model) {
-        model.addAttribute("error", e.getMessage());
-        return "error";
-    }
-
-    @ExceptionHandler(Exception.class)
-    public String handleGeneralError(Exception e, Model model) {
-        model.addAttribute("error", "An unexpected error occurred: " + e.getMessage());
-        return "error";
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public String handleError(RuntimeException e, Model model) {
-        model.addAttribute("error", e.getMessage());
-        return "error";
     }
 }

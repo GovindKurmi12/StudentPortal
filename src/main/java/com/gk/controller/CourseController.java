@@ -1,5 +1,6 @@
 package com.gk.controller;
 
+import com.gk.exception.NotFoundException;
 import com.gk.model.Course;
 import com.gk.service.CourseService;
 import jakarta.validation.Valid;
@@ -58,7 +59,7 @@ public class CourseController {
             model.addAttribute("schedules", course.getSchedules());
             return "courses/view";
         } catch (Exception e) {
-            throw new GlobalExceptionHandler.NotFoundException("Course not found with id: " + id);
+            throw new NotFoundException("Course not found with id: " + id);
         }
     }
 
@@ -68,7 +69,7 @@ public class CourseController {
             model.addAttribute("course", courseService.getCourseById(id));
             return "courses/form";
         } catch (Exception e) {
-            throw new GlobalExceptionHandler.NotFoundException("Course not found with id: " + id);
+            throw new NotFoundException("Course not found with id: " + id);
         }
     }
 
@@ -92,7 +93,7 @@ public class CourseController {
             model.addAttribute("enrollmentCount", courseService.getEnrollmentCount(id));
             return "courses/students";
         } catch (Exception e) {
-            throw new GlobalExceptionHandler.NotFoundException("Course not found with id: " + id);
+            throw new NotFoundException("Course not found with id: " + id);
         }
     }
 
@@ -137,7 +138,7 @@ public class CourseController {
             model.addAttribute("schedules", course.getSchedules());
             return "courses/schedule";
         } catch (Exception e) {
-            throw new GlobalExceptionHandler.NotFoundException("Course not found with id: " + id);
+            throw new NotFoundException("Course not found with id: " + id);
         }
     }
 
