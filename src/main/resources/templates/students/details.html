@@ -2,65 +2,127 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Student Details</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 10px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .section-title {
+            color: #2575fc;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .table {
+            margin-bottom: 2rem;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            width: 30%;
+        }
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border: none;
+            color: #000;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+        .info-icon {
+            margin-right: 0.5rem;
+            color: #2575fc;
+        }
+        .student-photo {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </head>
-<body>
-    <div class="container mt-5">
+<body class="bg-light">
+    <div class="container mt-5 mb-5">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3>Student Details</h3>
+                <h3 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student Details</h3>
                 <div>
-                    <a th:href="@{/students/{id}/edit(id=${student.id})}" class="btn btn-warning">Edit</a>
-                    <a href="/students/list" class="btn btn-secondary">Back to List</a>
+                    <a th:href="@{/students/{id}/edit(id=${student.id})}" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <a href="/students/list" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to List
+                    </a>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <div class="row">
                     <div class="col-md-6">
-                        <h4>Personal Information</h4>
-                        <table class="table">
+                        <h4 class="section-title"><i class="fas fa-user info-icon"></i>Personal Information</h4>
+                        <table class="table table-hover">
                             <tr>
-                                <th>Name:</th>
-                                <td th:text="${student.name}"></td>
+                                <th><i class="fas fa-user info-icon"></i>Name</th>
+                                <td th:text="${student != null ? student.name : ''}"></td>
                             </tr>
                             <tr>
-                                <th>Age:</th>
-                                <td th:text="${student.age}"></td>
+                                <th><i class="fas fa-calendar info-icon"></i>Age</th>
+                                <td th:text="${student != null ? student.age : ''}"></td>
                             </tr>
                             <tr>
-                                <th>Date of Birth:</th>
-                                <td th:text="${#dates.format(student.dateOfBirth, 'dd-MM-yyyy')}"></td>
+                                <th><i class="fas fa-birthday-cake info-icon"></i>Date of Birth</th>
+                                <td th:text="${student != null && student.dateOfBirth != null ? #temporals.format(student.dateOfBirth, 'dd-MM-yyyy') : ''}"></td>
                             </tr>
                             <tr>
-                                <th>Email:</th>
-                                <td th:text="${student.email}"></td>
+                                <th><i class="fas fa-envelope info-icon"></i>Email</th>
+                                <td th:text="${student != null ? student.email : ''}"></td>
                             </tr>
                             <tr>
-                                <th>Phone:</th>
-                                <td th:text="${student.phoneNumber}"></td>
+                                <th><i class="fas fa-phone info-icon"></i>Phone</th>
+                                <td th:text="${student != null ? student.phoneNumber : ''}"></td>
                             </tr>
                             <tr>
-                                <th>Address:</th>
-                                <td th:text="${student.address}"></td>
+                                <th><i class="fas fa-map-marker-alt info-icon"></i>Address</th>
+                                <td th:text="${student != null ? student.address : ''}"></td>
                             </tr>
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <h4>Academic Information</h4>
-                        <table class="table">
+                        <h4 class="section-title"><i class="fas fa-graduation-cap info-icon"></i>Academic Information</h4>
+                        <table class="table table-hover">
                             <tr>
                                 <th>Grade:</th>
-                                <td th:text="${student.grade}"></td>
+                                <td th:text="${student != null ? student.grade : ''}"></td>
                             </tr>
                             <tr>
                                 <th>Attendance:</th>
                                 <td>
-                                    <div class="progress">
+                                    <div class="progress" th:if="${student != null && student.attendance != null}">
                                         <div class="progress-bar" role="progressbar"
                                              th:style="'width: ' + ${student.attendance} + '%'"
                                              th:text="${student.attendance} + '%'">
                                         </div>
                                     </div>
+                                    <span th:if="${student == null || student.attendance == null}">N/A</span>
                                 </td>
                             </tr>
                         </table>
@@ -75,10 +137,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="mark : ${student.marks}">
-                                    <td th:text="${mark.subject}"></td>
-                                    <td th:text="${mark.marks}"></td>
-                                    <td th:text="${mark.grade}"></td>
+                                <tr th:if="${student != null && student.marks != null}" th:each="mark : ${student.marks}">
+                                    <td th:text="${mark != null ? mark.subject : ''}"></td>
+                                    <td th:text="${mark != null ? mark.marks : ''}"></td>
+                                    <td th:text="${mark != null ? mark.grade : ''}"></td>
+                                </tr>
+                                <tr th:if="${student == null || student.marks == null}">
+                                    <td colspan="3" class="text-center">No marks available</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -87,5 +152,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </body>
 </html>

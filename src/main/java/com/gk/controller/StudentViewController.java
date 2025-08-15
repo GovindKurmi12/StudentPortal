@@ -71,11 +71,21 @@ public class StudentViewController {
 
     @GetMapping("/{id}")
     public String viewStudent(@PathVariable Long id, Model model) {
-        Student student = studentService.getStudentById(id);
-        model.addAttribute("student", student);
-        model.addAttribute("averageMarks", studentService.calculateAverageMarks(id));
-        model.addAttribute("attendance", student.getAttendance());
-        return "students/details";
+        try {
+            Student student = studentService.getStudentById(id);
+            if (student == null) {
+                throw new RuntimeException("Student not found with id: " + id);
+            }
+            model.addAttribute("student", student);
+            if (student.getMarks() != null) {
+                model.addAttribute("averageMarks", studentService.calculateAverageMarks(id));
+            }
+            model.addAttribute("attendance", student.getAttendance());
+            return "students/details";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading student details: " + e.getMessage());
+            return "redirect:/students/list";
+        }
     }
 
     @GetMapping("/{id}/edit")
@@ -115,10 +125,19 @@ public class StudentViewController {
         return "students/dashboard";
     }
 
+    @GetMapping("/view/marks")
+    public String viewMarkPage(Model model) {
+        List<Student> students = studentService.getAllStudents();
+        model.addAttribute("students", students);
+        model.addAttribute("marks", new SubjectMark());
+        return "students/marks";
+    }
+
     // Marks Management
-    @GetMapping("/marks")
-    public String showMarksPage(Model model) {
-        model.addAttribute("students", studentService.getAllStudents());
+    @GetMapping("/marks/{id}")
+    public String showMarksPage(@PathVariable Long id, Model model) {
+        Student student = studentService.getStudentById(id);
+        model.addAttribute("student", student);
         model.addAttribute("newMark", new SubjectMark());
         return "students/marks";
     }
@@ -128,7 +147,7 @@ public class StudentViewController {
                           RedirectAttributes redirectAttributes) {
         studentService.addMarkToStudent(id, mark);
         redirectAttributes.addFlashAttribute("message", "Mark added successfully!");
-        return "redirect:/students/marks";
+        return "redirect:/students/marks/" + id;
     }
 
     // Attendance Management
