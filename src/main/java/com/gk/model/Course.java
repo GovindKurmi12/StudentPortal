@@ -262,6 +262,17 @@ public class Course {
         return sb.toString();
     }
 
+    public String getInstructor() {
+        if (schedules == null || schedules.isEmpty()) {
+            return null;
+        }
+        Set<String> instructors = new HashSet<>();
+        for (Schedule schedule : schedules) {
+            instructors.add(schedule.getInstructor());
+        }
+        return String.join(", ", instructors);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -446,6 +457,8 @@ public class Course {
         @Length(min = 2, max = 100, message = "Instructor name must be between 2 and 100 characters")
         private String instructor;
 
+        private String dayOfWeek;
+
         @Column(name = "session_type")
         private String sessionType;
 
@@ -463,6 +476,14 @@ public class Course {
             this.instructor = instructor;
             this.sessionType = sessionType;
             this.recurring = recurring;
+        }
+
+        public String getDayOfWeek() {
+            return dayOfWeek;
+        }
+
+        public void setDayOfWeek(String dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
         }
 
         public String getDay() {

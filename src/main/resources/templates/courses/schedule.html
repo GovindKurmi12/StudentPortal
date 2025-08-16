@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Course Schedule</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div th:replace="fragments/navigation :: navigation"></div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Course Schedule - <span th:text="${course.name}"></span></h2>
+            <div>
+                <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-secondary">Back to Course</a>
+            </div>
+        </div>
+
+        <div th:if="${message}" class="alert alert-success" role="alert">
+            <span th:text="${message}"></span>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Add New Schedule Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Add New Schedule</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/courses/{id}/schedule/add(id=${course.id})}" method="post">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="dayOfWeek">Day</label>
+                            <select class="form-control" id="dayOfWeek" name="dayOfWeek" required>
+                                <option value="MONDAY">Monday</option>
+                                <option value="TUESDAY">Tuesday</option>
+                                <option value="WEDNESDAY">Wednesday</option>
+                                <option value="THURSDAY">Thursday</option>
+                                <option value="FRIDAY">Friday</option>
+                                <option value="SATURDAY">Saturday</option>
+                                <option value="SUNDAY">Sunday</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="startTime">Start Time</label>
+                            <input type="time" class="form-control" id="startTime" name="startTime" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="endTime">End Time</label>
+                            <input type="time" class="form-control" id="endTime" name="endTime" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="room">Room</label>
+                            <input type="text" class="form-control" id="room" name="room" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Schedule</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Existing Schedules -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Schedules</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${schedules.isEmpty()}" class="alert alert-info">
+                    No schedules have been set for this course yet.
+                </div>
+
+                <div th:if="${!schedules.isEmpty()}" class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Time</th>
+                                <th>Room</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="schedule, stat : ${schedules}">
+                                <td th:text="${schedule.dayOfWeek}"></td>
+                                <td th:text="${schedule.startTime + ' - ' + schedule.endTime}"></td>
+                                <td th:text="${schedule.room}"></td>
+                                <td>
+                                    <form th:action="@{/courses/{courseId}/schedule/{index}/delete(courseId=${course.id},index=${stat.index})}"
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this schedule?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
