@@ -8,12 +8,18 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
-import java.util.Objects;
 
 @Embeddable
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SubjectMark {
     @NotBlank(message = "Subject name is required")
     @Length(min = 2, max = 50, message = "Subject name must be between 2 and 50 characters")
@@ -48,107 +54,6 @@ public class SubjectMark {
     @Length(max = 255, message = "Teacher name must not exceed 255 characters")
     private String teacherName;
 
-    public SubjectMark() {}
-
-    public SubjectMark(String subject, double marks, String grade, Date date, String term, String remarks,
-                      String comments, String examType, boolean isPublished, Date submissionDate, String teacherName) {
-        this.subject = subject;
-        this.marks = marks;
-        this.grade = grade;
-        this.date = date;
-        this.term = term;
-        this.remarks = remarks;
-        this.comments = comments;
-        this.examType = examType;
-        this.isPublished = isPublished;
-        this.submissionDate = submissionDate;
-        this.teacherName = teacherName;
-    }
-
-    public String getSubject() {
-        return subject;
-    }
-
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-
-    public double getMarks() {
-        return marks;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public String getTerm() {
-        return term;
-    }
-
-    public void setTerm(String term) {
-        this.term = term;
-    }
-
-    public String getRemarks() {
-        return remarks;
-    }
-
-    public void setRemarks(String remarks) {
-        this.remarks = remarks;
-    }
-
-    public String getComments() {
-        return comments;
-    }
-
-    public void setComments(String comments) {
-        this.comments = comments;
-    }
-
-    public String getExamType() {
-        return examType;
-    }
-
-    public void setExamType(String examType) {
-        this.examType = examType;
-    }
-
-    public boolean isPublished() {
-        return isPublished;
-    }
-
-    public void setPublished(boolean published) {
-        isPublished = published;
-    }
-
-    public Date getSubmissionDate() {
-        return submissionDate;
-    }
-
-    public void setSubmissionDate(Date submissionDate) {
-        this.submissionDate = submissionDate;
-    }
-
-    public String getTeacherName() {
-        return teacherName;
-    }
-
-    public void setTeacherName(String teacherName) {
-        this.teacherName = teacherName;
-    }
-
     public String calculateGrade() {
         if (marks >= 97) return "A+";
         if (marks >= 93) return "A";
@@ -179,48 +84,4 @@ public class SubjectMark {
         return isPassing() ? "PASS" : "FAIL";
     }
 
-    public boolean isLate() {
-        return submissionDate != null && date != null && submissionDate.after(date);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SubjectMark that = (SubjectMark) o;
-        return Double.compare(that.marks, marks) == 0 &&
-               isPublished == that.isPublished &&
-               Objects.equals(subject, that.subject) &&
-               Objects.equals(grade, that.grade) &&
-               Objects.equals(date, that.date) &&
-               Objects.equals(term, that.term) &&
-               Objects.equals(remarks, that.remarks) &&
-               Objects.equals(comments, that.comments) &&
-               Objects.equals(examType, that.examType) &&
-               Objects.equals(submissionDate, that.submissionDate) &&
-               Objects.equals(teacherName, that.teacherName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(subject, marks, grade, date, term, remarks, comments,
-                          examType, isPublished, submissionDate, teacherName);
-    }
-
-    @Override
-    public String toString() {
-        return "SubjectMark{" +
-               "subject='" + subject + '\'' +
-               ", marks=" + marks +
-               ", grade='" + grade + '\'' +
-               ", date=" + date +
-               ", term='" + term + '\'' +
-               ", remarks='" + remarks + '\'' +
-               ", comments='" + comments + '\'' +
-               ", examType='" + examType + '\'' +
-               ", isPublished=" + isPublished +
-               ", submissionDate=" + submissionDate +
-               ", teacherName='" + teacherName + '\'' +
-               '}';
-    }
 }

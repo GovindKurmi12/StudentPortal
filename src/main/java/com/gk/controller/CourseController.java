@@ -1,5 +1,6 @@
 package com.gk.controller;
 
+import com.gk.dto.Schedule;
 import com.gk.exception.NotFoundException;
 import com.gk.model.Course;
 import com.gk.service.CourseService;
@@ -149,7 +150,7 @@ public class CourseController {
 
     @PostMapping("/{id}/schedule/add")
     public String addSchedule(@PathVariable Long id,
-                              @Valid @ModelAttribute Course.Schedule schedule,
+                              @Valid @ModelAttribute Schedule schedule,
                               BindingResult result,
                               RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {

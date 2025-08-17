@@ -5,7 +5,6 @@ import com.gk.model.SubjectMark;
 import com.gk.service.CourseService;
 import com.gk.service.StudentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/students")
@@ -38,12 +38,9 @@ public class StudentViewController {
 
     @GetMapping("/list")
     public String listStudents(Model model, @RequestParam(required = false) String search) {
-        List<Student> students;
-        if (search != null && !search.isEmpty()) {
-            students = studentService.searchStudents(search);
-        } else {
-            students = studentService.getAllStudents();
-        }
+        List<Student> students = Optional.of(search).filter(s -> !s.isEmpty())
+                .map(s -> studentService.searchStudents(s.trim())).orElse(studentService.getAllStudents());
+
         model.addAttribute("students", students);
         return "students/list";
     }
@@ -244,9 +241,9 @@ public class StudentViewController {
 
     @PostMapping("/batch/update")
     public String handleBatchUpdate(@RequestParam List<Long> ids,
-                                  @RequestParam(required = false) String grade,
-                                  @RequestParam String action,
-                                  RedirectAttributes redirectAttributes) {
+                                    @RequestParam(required = false) String grade,
+                                    @RequestParam String action,
+                                    RedirectAttributes redirectAttributes) {
         try {
             if ("updateGrade".equals(action) && grade != null && !grade.isEmpty()) {
                 studentService.updateGradeBatch(ids, grade);

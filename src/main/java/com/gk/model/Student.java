@@ -1,7 +1,9 @@
 package com.gk.model;
 
+import com.gk.dto.FeeDetail;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
@@ -9,6 +11,11 @@ import java.util.*;
 
 @Entity
 @Table(name = "students")
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,9 +59,9 @@ public class Student {
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
-        name = "student_courses",
-        joinColumns = @JoinColumn(name = "student_id"),
-        inverseJoinColumns = @JoinColumn(name = "course_id")
+            name = "student_courses",
+            joinColumns = @JoinColumn(name = "student_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private Set<Course> courses = new HashSet<>();
 
@@ -105,117 +112,6 @@ public class Student {
     @Column(name = "last_modified_date")
     private Date lastModifiedDate;
 
-    @Embeddable
-    public static class FeeDetail {
-        @NotNull
-        private String feeType;
-
-        @NotNull
-        @Positive
-        private Double amount;
-
-        @NotNull
-        @Temporal(TemporalType.TIMESTAMP)
-        private Date paidDate;
-
-        @NotNull
-        private String status;
-
-        @NotNull
-        private String transactionId;
-
-        private String remarks;
-
-        public FeeDetail() {}
-
-        public FeeDetail(String feeType, Double amount, Date paidDate, String status, String transactionId, String remarks) {
-            this.feeType = feeType;
-            this.amount = amount;
-            this.paidDate = paidDate;
-            this.status = status;
-            this.transactionId = transactionId;
-            this.remarks = remarks;
-        }
-
-        public String getFeeType() {
-            return feeType;
-        }
-
-        public void setFeeType(String feeType) {
-            this.feeType = feeType;
-        }
-
-        public Double getAmount() {
-            return amount;
-        }
-
-        public void setAmount(Double amount) {
-            this.amount = amount;
-        }
-
-        public Date getPaidDate() {
-            return paidDate;
-        }
-
-        public void setPaidDate(Date paidDate) {
-            this.paidDate = paidDate;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
-        public String getTransactionId() {
-            return transactionId;
-        }
-
-        public void setTransactionId(String transactionId) {
-            this.transactionId = transactionId;
-        }
-
-        public String getRemarks() {
-            return remarks;
-        }
-
-        public void setRemarks(String remarks) {
-            this.remarks = remarks;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            FeeDetail feeDetail = (FeeDetail) o;
-            return Objects.equals(feeType, feeDetail.feeType) &&
-                   Objects.equals(amount, feeDetail.amount) &&
-                   Objects.equals(paidDate, feeDetail.paidDate) &&
-                   Objects.equals(status, feeDetail.status) &&
-                   Objects.equals(transactionId, feeDetail.transactionId) &&
-                   Objects.equals(remarks, feeDetail.remarks);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(feeType, amount, paidDate, status, transactionId, remarks);
-        }
-
-        @Override
-        public String toString() {
-            return "FeeDetail{" +
-                   "feeType='" + feeType + '\'' +
-                   ", amount=" + amount +
-                   ", paidDate=" + paidDate +
-                   ", status='" + status + '\'' +
-                   ", transactionId='" + transactionId + '\'' +
-                   ", remarks='" + remarks + '\'' +
-                   '}';
-        }
-    }
-
     @PrePersist
     protected void onCreate() {
         if (admissionDate == null) {
@@ -237,16 +133,8 @@ public class Student {
                 .sum() > 0;
     }
 
-    public boolean isAttendanceBelow(double threshold) {
-        return attendance < threshold;
-    }
-
     public boolean isEligibleForExam() {
         return attendance >= 75.0 && !hasUnpaidFees();
-    }
-
-    public String getFullName() {
-        return name;
     }
 
     public int getAge() {
@@ -254,251 +142,5 @@ public class Student {
             return age;
         }
         return (int) java.time.temporal.ChronoUnit.YEARS.between(dateOfBirth, LocalDate.now());
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<SubjectMark> getMarks() {
-        return marks;
-    }
-
-    public void setMarks(List<SubjectMark> marks) {
-        this.marks = marks;
-    }
-
-    public List<AttendanceRecord> getAttendanceRecords() {
-        return attendanceRecords;
-    }
-
-    public void setAttendanceRecords(List<AttendanceRecord> attendanceRecords) {
-        this.attendanceRecords = attendanceRecords;
-    }
-
-    public Set<Course> getCourses() {
-        return courses;
-    }
-
-    public void setCourses(Set<Course> courses) {
-        this.courses = courses;
-    }
-
-    public List<FeeDetail> getFeePayments() {
-        return feePayments;
-    }
-
-    public void setFeePayments(List<FeeDetail> feePayments) {
-        this.feePayments = feePayments;
-    }
-
-    public List<StudentEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(List<StudentEvent> events) {
-        this.events = events;
-    }
-
-    public String getParentEmail() {
-        return parentEmail;
-    }
-
-    public void setParentEmail(String parentEmail) {
-        this.parentEmail = parentEmail;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public double getAttendance() {
-        return attendance;
-    }
-
-    public void setAttendance(double attendance) {
-        this.attendance = attendance;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getParentPhone() {
-        return parentPhone;
-    }
-
-    public void setParentPhone(String parentPhone) {
-        this.parentPhone = parentPhone;
-    }
-
-    public String getBloodGroup() {
-        return bloodGroup;
-    }
-
-    public void setBloodGroup(String bloodGroup) {
-        this.bloodGroup = bloodGroup;
-    }
-
-    public String getEmergencyContact() {
-        return emergencyContact;
-    }
-
-    public void setEmergencyContact(String emergencyContact) {
-        this.emergencyContact = emergencyContact;
-    }
-
-    public LocalDate getAdmissionDate() {
-        return admissionDate;
-    }
-
-    public void setAdmissionDate(LocalDate admissionDate) {
-        this.admissionDate = admissionDate;
-    }
-
-    public String getRegistrationNumber() {
-        return registrationNumber;
-    }
-
-    public void setRegistrationNumber(String registrationNumber) {
-        this.registrationNumber = registrationNumber;
-    }
-
-    public String getSection() {
-        return section;
-    }
-
-    public void setSection(String section) {
-        this.section = section;
-    }
-
-    public String getRollNumber() {
-        return rollNumber;
-    }
-
-    public void setRollNumber(String rollNumber) {
-        this.rollNumber = rollNumber;
-    }
-
-    public String getParentName() {
-        return parentName;
-    }
-
-    public void setParentName(String parentName) {
-        this.parentName = parentName;
-    }
-
-    public String getParentOccupation() {
-        return parentOccupation;
-    }
-
-    public void setParentOccupation(String parentOccupation) {
-        this.parentOccupation = parentOccupation;
-    }
-
-    public Double getAnnualIncome() {
-        return annualIncome;
-    }
-
-    public void setAnnualIncome(Double annualIncome) {
-        this.annualIncome = annualIncome;
-    }
-
-    public Double getAttendancePercentage() {
-        return attendancePercentage;
-    }
-
-    public void setAttendancePercentage(Double attendancePercentage) {
-        this.attendancePercentage = attendancePercentage;
-    }
-
-    public double getAverageScore() {
-        return averageScore;
-    }
-
-    public void setAverageScore(double averageScore) {
-        this.averageScore = averageScore;
-    }
-
-    public Date getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(Date lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Student student = (Student) o;
-        return Objects.equals(id, student.id) &&
-                Objects.equals(email, student.email) &&
-                Objects.equals(registrationNumber, student.registrationNumber);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, email, registrationNumber);
-    }
-
-    @Override
-    public String toString() {
-        return "Student{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", grade='" + grade + '\'' +
-                ", registrationNumber='" + registrationNumber + '\'' +
-                '}';
     }
 }

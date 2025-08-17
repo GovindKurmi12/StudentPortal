@@ -1,9 +1,14 @@
 package com.gk.service;
 
+import com.gk.dto.AttendanceStatus;
+import com.gk.dto.FeeDetail;
 import com.gk.model.*;
 import com.gk.repository.AttendanceRepository;
 import com.gk.repository.StudentRepository;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +21,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +40,6 @@ public class StudentService {
 
     // Basic Student Operations
     public Student createStudent(Student student) {
-
         return studentRepository.save(student);
     }
 
@@ -121,7 +124,7 @@ public class StudentService {
                     AttendanceRecord record = new AttendanceRecord();
                     record.setStudent(student);
                     record.setDate(today);
-                    record.setStatus(AttendanceRecord.AttendanceStatus.ABSENT);
+                    record.setStatus(AttendanceStatus.ABSENT);
                     return record;
                 })
                 .collect(Collectors.toList());
@@ -134,7 +137,7 @@ public class StudentService {
             AttendanceRecord record = new AttendanceRecord();
             record.setStudent(student);
             record.setDate(date);
-            record.setStatus(AttendanceRecord.AttendanceStatus.valueOf(statuses.get(i)));
+            record.setStatus(AttendanceStatus.valueOf(statuses.get(i)));
             if (notes != null && i < notes.size()) {
                 record.setNotes(notes.get(i));
             }
@@ -147,7 +150,7 @@ public class StudentService {
     // Fee Management
     public void recordFeePayment(Long studentId, String feeType, double amount) {
         Student student = getStudentById(studentId);
-        Student.FeeDetail payment = new Student.FeeDetail();
+        FeeDetail payment = new FeeDetail();
         payment.setFeeType(feeType);
         payment.setAmount(amount);
         payment.setPaidDate(new Date());
@@ -165,7 +168,7 @@ public class StudentService {
         Student student = getStudentById(studentId);
         return student.getFeePayments().stream()
                 .filter(payment -> "PAID".equals(payment.getStatus()))
-                .mapToDouble(Student.FeeDetail::getAmount)
+                .mapToDouble(FeeDetail::getAmount)
                 .sum();
     }
 
@@ -443,7 +446,7 @@ public class StudentService {
             return 0.0;
         }
         long presentCount = student.getAttendanceRecords().stream()
-                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
+                .filter(record -> record.getStatus() == AttendanceStatus.PRESENT)
                 .count();
         return (double) presentCount / student.getAttendanceRecords().size() * 100;
     }
@@ -453,7 +456,7 @@ public class StudentService {
         return studentRepository.findAll().stream()
                 .flatMap(student -> student.getFeePayments().stream())
                 .filter(payment -> "PAID".equals(payment.getStatus()))
-                .mapToDouble(Student.FeeDetail::getAmount)
+                .mapToDouble(FeeDetail::getAmount)
                 .sum();
     }
 
@@ -463,7 +466,7 @@ public class StudentService {
                 .flatMap(student -> student.getFeePayments().stream())
                 .filter(payment -> "PAID".equals(payment.getStatus()))
                 .filter(payment -> isSameDay(payment.getPaidDate(), today))
-                .mapToDouble(Student.FeeDetail::getAmount)
+                .mapToDouble(FeeDetail::getAmount)
                 .sum();
     }
 
@@ -510,7 +513,7 @@ public class StudentService {
                     cal.setTime(payment.getPaidDate());
                     return cal.get(Calendar.MONTH) == month && cal.get(Calendar.YEAR) == year;
                 })
-                .mapToDouble(Student.FeeDetail::getAmount)
+                .mapToDouble(FeeDetail::getAmount)
                 .sum();
     }
 
@@ -519,8 +522,8 @@ public class StudentService {
                 .flatMap(student -> student.getFeePayments().stream())
                 .filter(payment -> "PAID".equals(payment.getStatus()))
                 .collect(Collectors.groupingBy(
-                        Student.FeeDetail::getFeeType,
-                        Collectors.summingDouble(Student.FeeDetail::getAmount)
+                        FeeDetail::getFeeType,
+                        Collectors.summingDouble(FeeDetail::getAmount)
                 ));
     }
 
@@ -557,7 +560,7 @@ public class StudentService {
     private Date getLastPaymentDate(Student student) {
         return student.getFeePayments().stream()
                 .filter(payment -> "PAID".equals(payment.getStatus()))
-                .map(Student.FeeDetail::getPaidDate)
+                .map(FeeDetail::getPaidDate)
                 .max(Date::compareTo)
                 .orElse(null);
     }
@@ -578,7 +581,7 @@ public class StudentService {
             Sheet sheet = workbook.createSheet("Fee Receipt");
 
             // Find the payment by transactionId
-            Optional<Student.FeeDetail> paymentOpt = studentRepository.findAll().stream()
+            Optional<FeeDetail> paymentOpt = studentRepository.findAll().stream()
                     .flatMap(student -> student.getFeePayments().stream())
                     .filter(payment -> transactionId.equals(payment.getTransactionId()))
                     .findFirst();
@@ -587,7 +590,7 @@ public class StudentService {
                 throw new RuntimeException("Payment not found for transaction: " + transactionId);
             }
 
-            Student.FeeDetail payment = paymentOpt.get();
+            FeeDetail payment = paymentOpt.get();
             Student student = studentRepository.findAll().stream()
                     .filter(s -> s.getFeePayments().contains(payment))
                     .findFirst()
@@ -732,15 +735,15 @@ public class StudentService {
             cal.add(Calendar.MONTH, -1);
             String monthLabel = monthFormat.format(cal.getTime());
             List<Attendance> monthlyAttendance = attendanceRepository.findByDateBetween(
-                getMonthStart(cal.getTime()),
-                getMonthEnd(cal.getTime())
+                    getMonthStart(cal.getTime()),
+                    getMonthEnd(cal.getTime())
             );
 
             double attendancePercentage = 0.0;
             if (!monthlyAttendance.isEmpty()) {
                 long presentCount = monthlyAttendance.stream()
-                    .filter(Attendance::isPresent)
-                    .count();
+                        .filter(Attendance::isPresent)
+                        .count();
                 attendancePercentage = (double) presentCount * 100 / monthlyAttendance.size();
             }
             trend.put(monthLabel, attendancePercentage);
@@ -812,14 +815,14 @@ public class StudentService {
     public int getAttendedClassesCount(Long studentId) {
         Student student = getStudentById(studentId);
         return (int) student.getAttendanceRecords().stream()
-                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
+                .filter(record -> record.getStatus() == AttendanceStatus.PRESENT)
                 .count();
     }
 
     public int getMissedClassesCount(Long studentId) {
         Student student = getStudentById(studentId);
         return (int) student.getAttendanceRecords().stream()
-                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.ABSENT)
+                .filter(record -> record.getStatus() == AttendanceStatus.ABSENT)
                 .count();
     }
 

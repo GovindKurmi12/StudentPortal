@@ -1,5 +1,6 @@
 package com.gk.service;
 
+import com.gk.dto.Schedule;
 import com.gk.model.Course;
 import com.gk.model.Student;
 import com.gk.repository.CourseRepository;
@@ -71,7 +72,7 @@ public class CourseService {
         return courseRepository.getEnrollmentCount(courseId);
     }
 
-    public void addSchedule(Long courseId, Course.Schedule schedule) {
+    public void addSchedule(Long courseId, Schedule schedule) {
         Course course = getCourseById(courseId);
         course.getSchedules().add(schedule);
         courseRepository.save(course);

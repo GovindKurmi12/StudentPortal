@@ -43,18 +43,18 @@ public class EventController {
         List<Student> students = studentService.getAllStudents();
 
         List<Map<String, Object>> events = students.stream()
-            .flatMap(student -> student.getEvents().stream())
-            .map(event -> {
-                Map<String, Object> eventMap = new HashMap<>();
-                eventMap.put("id", event.getId());
-                eventMap.put("title", event.getTitle());
-                eventMap.put("start", event.getStart().toString());
-                eventMap.put("description", event.getDescription());
-                eventMap.put("type", event.getType().toString());
-                eventMap.put("className", getEventClassName(event.getType()));
-                return eventMap;
-            })
-            .collect(Collectors.toList());
+                .flatMap(student -> student.getEvents().stream())
+                .map(event -> {
+                    Map<String, Object> eventMap = new HashMap<>();
+                    eventMap.put("id", event.getId());
+                    eventMap.put("title", event.getTitle());
+                    eventMap.put("start", event.getStart().toString());
+                    eventMap.put("description", event.getDescription());
+                    eventMap.put("type", event.getType().toString());
+                    eventMap.put("className", getEventClassName(event.getType()));
+                    return eventMap;
+                })
+                .toList();
 
         model.addAttribute("events", events);
         model.addAttribute("eventTypes", EventType.values());
@@ -78,12 +78,12 @@ public class EventController {
             @RequestParam String description) {
 
         StudentEvent event = StudentEvent.builder()
-            .title(title)
-            .start(start)
-            .type(type)
-            .description(description)
-            .status("SCHEDULED")
-            .build();
+                .title(title)
+                .start(start)
+                .type(type)
+                .description(description)
+                .status("SCHEDULED")
+                .build();
 
         studentService.addEventToStudent(studentId, event);
         return "redirect:/events/calendar";
