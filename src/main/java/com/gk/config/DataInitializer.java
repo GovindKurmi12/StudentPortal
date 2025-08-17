@@ -26,7 +26,7 @@ public class DataInitializer implements CommandLineRunner {
         if (!userService.userExists("admin")) {
             User adminUser = new User();
             adminUser.setUsername("admin");
-            adminUser.setPassword("admin123"); // Will be encoded by UserService
+            adminUser.setPassword("admin"); // Will be encoded by UserService
             adminUser.setEmail("admin@studentportal.com");
             adminUser.setFirstName("System");
             adminUser.setLastName("Administrator");

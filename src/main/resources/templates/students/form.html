@@ -7,7 +7,7 @@
 <body>
     <div class="container mt-5">
         <h2 th:text="${student.id} ? 'Edit Student' : 'Add New Student'"></h2>
-        <form th:action="@{/api/students/save}" th:object="${student}" method="post" class="needs-validation" novalidate>
+        <form th:action="@{/students/save}" th:object="${student}" method="post" class="needs-validation" novalidate>
             <input type="hidden" th:field="*{id}" />
 
             <div class="row">

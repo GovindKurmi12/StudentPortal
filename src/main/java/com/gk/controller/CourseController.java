@@ -54,7 +54,12 @@ public class CourseController {
     public String viewCourse(@PathVariable Long id, Model model) {
         try {
             Course course = courseService.getCourseById(id);
+            double enrollmentPercentage = course.getMaxStudents() > 0
+                ? (course.getStudents().size() * 100.0) / course.getMaxStudents()
+                : 0;
+
             model.addAttribute("course", course);
+            model.addAttribute("enrollmentPercentage", enrollmentPercentage);
             model.addAttribute("enrolledStudents", course.getStudents());
             model.addAttribute("schedules", course.getSchedules());
             return "courses/view";

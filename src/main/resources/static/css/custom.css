@@ -1,0 +1,117 @@
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.navbar-brand:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #fff;
+    transition: width 0.3s ease;
+}
+
+.navbar-brand:hover:after {
+    width: 100%;
+}
+
+.nav-link {
+    position: relative;
+    padding: 0.5rem 1rem;
+    margin: 0 0.2rem;
+    transition: all 0.3s ease;
+}
+
+.nav-link:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: #fff;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover:before {
+    width: 100%;
+}
+
+.nav-link i {
+    margin-right: 5px;
+    transition: transform 0.3s ease;
+}
+
+.nav-link:hover i {
+    transform: scale(1.2);
+}
+
+.navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+.navbar-toggler-icon {
+    transition: transform 0.3s ease;
+}
+
+.navbar-toggler:hover .navbar-toggler-icon {
+    transform: rotate(90deg);
+}
+
+.nav-user-profile {
+    display: flex;
+    align-items: center;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.nav-user-profile:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.nav-user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar-nav {
+    animation: fadeInDown 0.5s ease;
+}
+
+/* Gradient background for navbar */
+.bg-gradient-dark {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}

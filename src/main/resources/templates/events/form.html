@@ -39,11 +39,11 @@
 
             <div class="form-group">
                 <label for="eventType">Event Type</label>
-                <select class="form-control" id="eventType" name="eventType" required>
+                <select class="form-control" id="eventType" name="type" required>
                     <option value="">Select Event Type</option>
-                    <option th:each="type : ${eventTypes}"
-                            th:value="${type}"
-                            th:text="${type}">
+                    <option th:each="type : ${T(com.gk.model.EventType).values()}"
+                            th:value="${type.name()}"
+                            th:text="${type.getDisplayName()}">
                     </option>
                 </select>
                 <div class="invalid-feedback">Please select an event type</div>

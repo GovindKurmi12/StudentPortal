@@ -40,7 +40,7 @@
                                     <div class="progress">
                                         <div class="progress-bar" role="progressbar"
                                              th:style="'width: ' + ${#numbers.formatDecimal(enrollmentPercentage, 0, 0)} + '%'"
-                                             th:text="${course.enrolledStudents.size() + '/' + course.maxStudents}">
+                                             th:text="${course.students.size() + '/' + course.maxStudents}">
                                         </div>
                                     </div>
                                 </td>
@@ -90,7 +90,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="student : ${course.enrolledStudents}">
+                                    <tr th:each="student : ${course.students}">
                                         <td th:text="${student.id}"></td>
                                         <td>
                                             <a th:href="@{/students/{id}(id=${student.id})}"
