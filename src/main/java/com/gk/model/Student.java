@@ -98,8 +98,8 @@ public class Student {
     @Column(name = "attendance_percentage")
     private Double attendancePercentage;
 
-    @Column(name = "average_score")
-    private Double averageScore;
+    @Transient
+    private double averageScore;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "last_modified_date")
@@ -460,17 +460,11 @@ public class Student {
         this.attendancePercentage = attendancePercentage;
     }
 
-    public Double getAverageScore() {
-        if (marks == null || marks.isEmpty()) {
-            return 0.0;
-        }
-        return marks.stream()
-                .mapToDouble(SubjectMark::getMarks)
-                .average()
-                .orElse(0.0);
+    public double getAverageScore() {
+        return averageScore;
     }
 
-    public void setAverageScore(Double averageScore) {
+    public void setAverageScore(double averageScore) {
         this.averageScore = averageScore;
     }
 

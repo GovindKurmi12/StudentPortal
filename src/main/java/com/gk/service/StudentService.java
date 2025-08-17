@@ -1,11 +1,9 @@
 package com.gk.service;
 
 import com.gk.model.*;
+import com.gk.repository.AttendanceRepository;
 import com.gk.repository.StudentRepository;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,10 +26,12 @@ public class StudentService {
     private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
 
     private final StudentRepository studentRepository;
+    private final AttendanceRepository attendanceRepository;
 
     @Autowired
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, AttendanceRepository attendanceRepository) {
         this.studentRepository = studentRepository;
+        this.attendanceRepository = attendanceRepository;
     }
 
     // Basic Student Operations
@@ -76,8 +78,8 @@ public class StudentService {
         return studentRepository.findAll().stream()
                 .filter(student ->
                         student.getName().toLowerCase().contains(query.toLowerCase()) ||
-                        student.getEmail().toLowerCase().contains(query.toLowerCase()) ||
-                        student.getGrade().toLowerCase().contains(query.toLowerCase())
+                                student.getEmail().toLowerCase().contains(query.toLowerCase()) ||
+                                student.getGrade().toLowerCase().contains(query.toLowerCase())
                 )
                 .collect(Collectors.toList());
     }
@@ -115,18 +117,18 @@ public class StudentService {
     public List<AttendanceRecord> getTodayAttendanceRecords() {
         Date today = new Date();
         return getAllStudents().stream()
-            .map(student -> {
-                AttendanceRecord record = new AttendanceRecord();
-                record.setStudent(student);
-                record.setDate(today);
-                record.setStatus(AttendanceRecord.AttendanceStatus.ABSENT);
-                return record;
-            })
-            .collect(Collectors.toList());
+                .map(student -> {
+                    AttendanceRecord record = new AttendanceRecord();
+                    record.setStudent(student);
+                    record.setDate(today);
+                    record.setStatus(AttendanceRecord.AttendanceStatus.ABSENT);
+                    return record;
+                })
+                .collect(Collectors.toList());
     }
 
     public void markAttendance(Date date, List<Long> studentIds,
-                             List<String> statuses, List<String> notes) {
+                               List<String> statuses, List<String> notes) {
         for (int i = 0; i < studentIds.size(); i++) {
             Student student = getStudentById(studentIds.get(i));
             AttendanceRecord record = new AttendanceRecord();
@@ -188,10 +190,10 @@ public class StudentService {
     public List<StudentEvent> getUpcomingEvents() {
         LocalDateTime now = LocalDateTime.now();
         return getAllStudents().stream()
-            .flatMap(student -> student.getEvents().stream())
-            .filter(event -> event.getStart().isAfter(now))
-            .sorted(Comparator.comparing(StudentEvent::getStart))
-            .collect(Collectors.toList());
+                .flatMap(student -> student.getEvents().stream())
+                .filter(event -> event.getStart().isAfter(now))
+                .sorted(Comparator.comparing(StudentEvent::getStart))
+                .collect(Collectors.toList());
     }
 
     // Parent Communication
@@ -229,8 +231,8 @@ public class StudentService {
         report.put("paidFees", calculatePaidAmount(studentId));
         report.put("dueFees", calculateDueAmount(studentId));
         report.put("upcomingEvents", student.getEvents().stream()
-            .filter(event -> event.getStart().isAfter(LocalDateTime.now()))
-            .collect(Collectors.toList()));
+                .filter(event -> event.getStart().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList()));
         return report;
     }
 
@@ -319,15 +321,75 @@ public class StudentService {
         return new Date();
     }
 
+    // Export functionality
     public byte[] exportToExcel() {
-        try (Workbook workbook = new XSSFWorkbook()) {
+        logger.info("Starting Excel export process");
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
             Sheet sheet = workbook.createSheet("Students");
-            createHeaderRow(sheet);
-            populateData(sheet);
-            autoSizeColumns(sheet);
-            return writeWorkbookToBytes(workbook);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to export data to Excel", e);
+            logger.debug("Created Excel sheet");
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {"ID", "Name", "Email", "Phone", "Grade", "Section", "Parent Name", "Parent Email",
+                    "Parent Phone", "Address", "Blood Group", "Admission Date", "Attendance %"};
+
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+            }
+            logger.debug("Added header row");
+
+            // Create data rows
+            List<Student> students = getAllStudents();
+            logger.info("Retrieved {} students for export", students.size());
+            int rowNum = 1;
+
+            try {
+                for (Student student : students) {
+                    if (student != null) {
+                        logger.debug("Processing student: {}", student.getId());
+                        Row row = sheet.createRow(rowNum++);
+
+                        try {
+                            row.createCell(1).setCellValue(student.getName() != null ? student.getName() : "");
+                            row.createCell(2).setCellValue(student.getEmail() != null ? student.getEmail() : "");
+                            row.createCell(3).setCellValue(student.getPhoneNumber() != null ? student.getPhoneNumber() : "");
+                            row.createCell(4).setCellValue(student.getGrade() != null ? student.getGrade() : "");
+                            row.createCell(5).setCellValue(student.getSection() != null ? student.getSection() : "");
+                            row.createCell(6).setCellValue(student.getParentName() != null ? student.getParentName() : "");
+                            row.createCell(7).setCellValue(student.getParentEmail() != null ? student.getParentEmail() : "");
+                            row.createCell(8).setCellValue(student.getParentPhone() != null ? student.getParentPhone() : "");
+                            row.createCell(9).setCellValue(student.getAddress() != null ? student.getAddress() : "");
+                            row.createCell(10).setCellValue(student.getBloodGroup() != null ? student.getBloodGroup() : "");
+                            row.createCell(11).setCellValue(student.getAdmissionDate() != null ?
+                                    student.getAdmissionDate().toString() : "");
+                            row.createCell(12).setCellValue(String.format("%.2f", student.getAttendance()));
+                        } catch (Exception e) {
+                            logger.error("Error processing student data: {} - {}", student.getId(), e.getMessage());
+                        }
+                    }
+                }
+                logger.debug("Completed processing all students");
+            } catch (Exception e) {
+                logger.error("Error during student data processing", e);
+                throw new RuntimeException("Error processing student data: " + e.getMessage());
+            }
+
+            // Autosize columns
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            logger.debug("Adjusted column widths");
+
+            workbook.write(outputStream);
+            logger.info("Successfully completed Excel export");
+            return outputStream.toByteArray();
+
+        } catch (IOException e) {
+            logger.error("Failed to create Excel file", e);
+            throw new RuntimeException("Failed to create Excel file: " + e.getMessage());
         }
     }
 
@@ -342,16 +404,16 @@ public class StudentService {
     private List<Map<String, Object>> getPaymentHistory(Long studentId) {
         Student student = getStudentById(studentId);
         return student.getFeePayments().stream()
-            .map(payment -> {
-                Map<String, Object> history = new HashMap<>();
-                history.put("date", payment.getPaidDate());
-                history.put("amount", payment.getAmount());
-                history.put("type", payment.getFeeType());
-                history.put("status", payment.getStatus());
-                history.put("transactionId", payment.getTransactionId());
-                return history;
-            })
-            .collect(Collectors.toList());
+                .map(payment -> {
+                    Map<String, Object> history = new HashMap<>();
+                    history.put("date", payment.getPaidDate());
+                    history.put("amount", payment.getAmount());
+                    history.put("type", payment.getFeeType());
+                    history.put("status", payment.getStatus());
+                    history.put("transactionId", payment.getTransactionId());
+                    return history;
+                })
+                .collect(Collectors.toList());
     }
 
     private String generateTransactionId() {
@@ -381,48 +443,48 @@ public class StudentService {
             return 0.0;
         }
         long presentCount = student.getAttendanceRecords().stream()
-            .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
-            .count();
+                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
+                .count();
         return (double) presentCount / student.getAttendanceRecords().size() * 100;
     }
 
     // Fee Statistics and Reports
     public double calculateTotalRevenue() {
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream())
-            .filter(payment -> "PAID".equals(payment.getStatus()))
-            .mapToDouble(Student.FeeDetail::getAmount)
-            .sum();
+                .flatMap(student -> student.getFeePayments().stream())
+                .filter(payment -> "PAID".equals(payment.getStatus()))
+                .mapToDouble(Student.FeeDetail::getAmount)
+                .sum();
     }
 
     public double calculateTodayPayments() {
         Date today = new Date();
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream())
-            .filter(payment -> "PAID".equals(payment.getStatus()))
-            .filter(payment -> isSameDay(payment.getPaidDate(), today))
-            .mapToDouble(Student.FeeDetail::getAmount)
-            .sum();
+                .flatMap(student -> student.getFeePayments().stream())
+                .filter(payment -> "PAID".equals(payment.getStatus()))
+                .filter(payment -> isSameDay(payment.getPaidDate(), today))
+                .mapToDouble(Student.FeeDetail::getAmount)
+                .sum();
     }
 
     public int getTodayTransactionCount() {
         Date today = new Date();
         return (int) studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream())
-            .filter(payment -> isSameDay(payment.getPaidDate(), today))
-            .count();
+                .flatMap(student -> student.getFeePayments().stream())
+                .filter(payment -> isSameDay(payment.getPaidDate(), today))
+                .count();
     }
 
     public double calculateTotalPendingDues() {
         return studentRepository.findAll().stream()
-            .mapToDouble(student -> calculateDueAmount(student.getId()))
-            .sum();
+                .mapToDouble(student -> calculateDueAmount(student.getId()))
+                .sum();
     }
 
     public double calculateCollectionRate() {
         double totalFees = studentRepository.findAll().stream()
-            .mapToDouble(student -> calculateTotalFees(student.getId()))
-            .sum();
+                .mapToDouble(student -> calculateTotalFees(student.getId()))
+                .sum();
         return totalFees == 0 ? 0 : (calculateTotalRevenue() / totalFees) * 100;
     }
 
@@ -442,62 +504,62 @@ public class StudentService {
 
     private double calculateRevenueForMonth(int month, int year) {
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream())
-            .filter(payment -> {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(payment.getPaidDate());
-                return cal.get(Calendar.MONTH) == month && cal.get(Calendar.YEAR) == year;
-            })
-            .mapToDouble(Student.FeeDetail::getAmount)
-            .sum();
+                .flatMap(student -> student.getFeePayments().stream())
+                .filter(payment -> {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(payment.getPaidDate());
+                    return cal.get(Calendar.MONTH) == month && cal.get(Calendar.YEAR) == year;
+                })
+                .mapToDouble(Student.FeeDetail::getAmount)
+                .sum();
     }
 
     public Map<String, Double> getFeeTypeDistribution() {
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream())
-            .filter(payment -> "PAID".equals(payment.getStatus()))
-            .collect(Collectors.groupingBy(
-                Student.FeeDetail::getFeeType,
-                Collectors.summingDouble(Student.FeeDetail::getAmount)
-            ));
+                .flatMap(student -> student.getFeePayments().stream())
+                .filter(payment -> "PAID".equals(payment.getStatus()))
+                .collect(Collectors.groupingBy(
+                        Student.FeeDetail::getFeeType,
+                        Collectors.summingDouble(Student.FeeDetail::getAmount)
+                ));
     }
 
     public List<Map<String, Object>> getRecentPayments() {
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getFeePayments().stream()
-                .map(payment -> {
-                    Map<String, Object> paymentData = new HashMap<>();
-                    paymentData.put("studentName", student.getName());
-                    paymentData.put("amount", payment.getAmount());
-                    paymentData.put("date", payment.getPaidDate());
-                    paymentData.put("type", payment.getFeeType());
-                    return paymentData;
-                }))
-            .sorted((p1, p2) -> ((Date)p2.get("date")).compareTo((Date)p1.get("date")))
-            .limit(10)
-            .collect(Collectors.toList());
+                .flatMap(student -> student.getFeePayments().stream()
+                        .map(payment -> {
+                            Map<String, Object> paymentData = new HashMap<>();
+                            paymentData.put("studentName", student.getName());
+                            paymentData.put("amount", payment.getAmount());
+                            paymentData.put("date", payment.getPaidDate());
+                            paymentData.put("type", payment.getFeeType());
+                            return paymentData;
+                        }))
+                .sorted((p1, p2) -> ((Date) p2.get("date")).compareTo((Date) p1.get("date")))
+                .limit(10)
+                .collect(Collectors.toList());
     }
 
     public List<Map<String, Object>> getDuePayments() {
         return studentRepository.findAll().stream()
-            .filter(student -> calculateDueAmount(student.getId()) > 0)
-            .map(student -> {
-                Map<String, Object> dueData = new HashMap<>();
-                dueData.put("studentName", student.getName());
-                dueData.put("studentId", student.getId());
-                dueData.put("dueAmount", calculateDueAmount(student.getId()));
-                dueData.put("lastPaymentDate", getLastPaymentDate(student));
-                return dueData;
-            })
-            .collect(Collectors.toList());
+                .filter(student -> calculateDueAmount(student.getId()) > 0)
+                .map(student -> {
+                    Map<String, Object> dueData = new HashMap<>();
+                    dueData.put("studentName", student.getName());
+                    dueData.put("studentId", student.getId());
+                    dueData.put("dueAmount", calculateDueAmount(student.getId()));
+                    dueData.put("lastPaymentDate", getLastPaymentDate(student));
+                    return dueData;
+                })
+                .collect(Collectors.toList());
     }
 
     private Date getLastPaymentDate(Student student) {
         return student.getFeePayments().stream()
-            .filter(payment -> "PAID".equals(payment.getStatus()))
-            .map(Student.FeeDetail::getPaidDate)
-            .max(Date::compareTo)
-            .orElse(null);
+                .filter(payment -> "PAID".equals(payment.getStatus()))
+                .map(Student.FeeDetail::getPaidDate)
+                .max(Date::compareTo)
+                .orElse(null);
     }
 
     public void sendFeeReminder(Long studentId) {
@@ -506,7 +568,7 @@ public class StudentService {
         if (dueAmount > 0) {
             String subject = "Fee Payment Reminder";
             String message = String.format("Dear Parent, This is a reminder that %.2f is pending for %s's fees.",
-                dueAmount, student.getName());
+                    dueAmount, student.getName());
             sendParentMessage(studentId, subject, message);
         }
     }
@@ -517,9 +579,9 @@ public class StudentService {
 
             // Find the payment by transactionId
             Optional<Student.FeeDetail> paymentOpt = studentRepository.findAll().stream()
-                .flatMap(student -> student.getFeePayments().stream())
-                .filter(payment -> transactionId.equals(payment.getTransactionId()))
-                .findFirst();
+                    .flatMap(student -> student.getFeePayments().stream())
+                    .filter(payment -> transactionId.equals(payment.getTransactionId()))
+                    .findFirst();
 
             if (paymentOpt.isEmpty()) {
                 throw new RuntimeException("Payment not found for transaction: " + transactionId);
@@ -527,9 +589,9 @@ public class StudentService {
 
             Student.FeeDetail payment = paymentOpt.get();
             Student student = studentRepository.findAll().stream()
-                .filter(s -> s.getFeePayments().contains(payment))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Student not found for payment"));
+                    .filter(s -> s.getFeePayments().contains(payment))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Student not found for payment"));
 
             // Create receipt content
             Row headerRow = sheet.createRow(0);
@@ -571,8 +633,8 @@ public class StudentService {
     private void createHeaderRow(Sheet sheet) {
         Row headerRow = sheet.createRow(0);
         String[] headers = {
-            "ID", "Name", "Grade", "Email", "Phone", "Attendance %",
-            "Parent Name", "Parent Email", "Registration Number"
+                "ID", "Name", "Grade", "Email", "Phone", "Attendance %",
+                "Parent Name", "Parent Email", "Registration Number"
         };
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -629,9 +691,9 @@ public class StudentService {
             return 0.0;
         }
         return students.stream()
-            .mapToDouble(Student::getAttendance)
-            .average()
-            .orElse(0.0);
+                .mapToDouble(Student::getAttendance)
+                .average()
+                .orElse(0.0);
     }
 
     public double getAverageGrade() {
@@ -640,62 +702,64 @@ public class StudentService {
             return 0.0;
         }
         return students.stream()
-            .mapToDouble(student -> calculateAverageMarks(student.getId()))
-            .average()
-            .orElse(0.0);
+                .mapToDouble(student -> calculateAverageMarks(student.getId()))
+                .average()
+                .orElse(0.0);
     }
 
     public long getTotalCourses() {
         return studentRepository.findAll().stream()
-            .flatMap(student -> student.getCourses().stream())
-            .distinct()
-            .count();
+                .flatMap(student -> student.getCourses().stream())
+                .distinct()
+                .count();
     }
 
     public Map<String, Long> getGradeDistribution() {
         return studentRepository.findAll().stream()
-            .collect(Collectors.groupingBy(
-                Student::getGrade,
-                Collectors.counting()
-            ));
+                .collect(Collectors.groupingBy(
+                        Student::getGrade,
+                        Collectors.counting()
+                ));
     }
 
-    public List<Map<String, Object>> getAttendanceTrend() {
-        List<Map<String, Object>> trend = new ArrayList<>();
+    public Map<String, Double> getAttendanceTrend() {
+        Map<String, Double> trend = new LinkedHashMap<>();
         Calendar cal = Calendar.getInstance();
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MMM");
+
+        // Initialize with current month and go back 6 months
         for (int i = 5; i >= 0; i--) {
             cal.add(Calendar.MONTH, -1);
-            Date monthStart = cal.getTime();
-            Map<String, Object> monthData = new HashMap<>();
-            monthData.put("month", monthStart);
-            monthData.put("averageAttendance", calculateMonthlyAttendance(monthStart));
-            trend.add(monthData);
+            String monthLabel = monthFormat.format(cal.getTime());
+            List<Attendance> monthlyAttendance = attendanceRepository.findByDateBetween(
+                getMonthStart(cal.getTime()),
+                getMonthEnd(cal.getTime())
+            );
+
+            double attendancePercentage = 0.0;
+            if (!monthlyAttendance.isEmpty()) {
+                long presentCount = monthlyAttendance.stream()
+                    .filter(Attendance::isPresent)
+                    .count();
+                attendancePercentage = (double) presentCount * 100 / monthlyAttendance.size();
+            }
+            trend.put(monthLabel, attendancePercentage);
         }
         return trend;
     }
 
-    private double calculateMonthlyAttendance(Date month) {
+    private Date getMonthStart(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(month);
-        int targetMonth = cal.get(Calendar.MONTH);
-        int targetYear = cal.get(Calendar.YEAR);
-
-        return studentRepository.findAll().stream()
-            .flatMap(student -> student.getAttendanceRecords().stream())
-            .filter(record -> {
-                cal.setTime(record.getDate());
-                return cal.get(Calendar.MONTH) == targetMonth &&
-                       cal.get(Calendar.YEAR) == targetYear;
-            })
-            .map(AttendanceRecord::getStatus)
-            .filter(status -> status == AttendanceRecord.AttendanceStatus.PRESENT)
-            .count() * 100.0 / Math.max(1, getTotalClassesInMonth(month));
+        cal.setTime(date);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        return cal.getTime();
     }
 
-    private int getTotalClassesInMonth(Date month) {
+    private Date getMonthEnd(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(month);
-        return cal.getActualMaximum(Calendar.DAY_OF_MONTH) * 5 / 7; // Approximate working days
+        cal.setTime(date);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        return cal.getTime();
     }
 
     // Academic Progress Methods
@@ -712,31 +776,31 @@ public class StudentService {
 
     private Map<String, Double> calculateCourseProgress(Student student) {
         return student.getCourses().stream()
-            .collect(Collectors.toMap(
-                Course::getName,
-                course -> calculateCourseCompletion(student, course)
-            ));
+                .collect(Collectors.toMap(
+                        Course::getName,
+                        course -> calculateCourseCompletion(student, course)
+                ));
     }
 
     private double calculateCourseCompletion(Student student, Course course) {
         // This is a placeholder implementation
         return student.getMarks().stream()
-            .filter(mark -> mark.getSubject().equals(course.getName()))
-            .count() * 100.0 / course.getTotalUnits();
+                .filter(mark -> mark.getSubject().equals(course.getName()))
+                .count() * 100.0 / course.getTotalUnits();
     }
 
     private List<Map<String, Object>> getRecentPerformance(Student student) {
         return student.getMarks().stream()
-            .sorted(Comparator.comparing(SubjectMark::getDate).reversed())
-            .limit(5)
-            .map(mark -> {
-                Map<String, Object> performance = new HashMap<>();
-                performance.put("subject", mark.getSubject());
-                performance.put("marks", mark.getMarks());
-                performance.put("date", mark.getDate());
-                return performance;
-            })
-            .collect(Collectors.toList());
+                .sorted(Comparator.comparing(SubjectMark::getDate).reversed())
+                .limit(5)
+                .map(mark -> {
+                    Map<String, Object> performance = new HashMap<>();
+                    performance.put("subject", mark.getSubject());
+                    performance.put("marks", mark.getMarks());
+                    performance.put("date", mark.getDate());
+                    return performance;
+                })
+                .collect(Collectors.toList());
     }
 
     // Attendance Report Methods
@@ -748,23 +812,23 @@ public class StudentService {
     public int getAttendedClassesCount(Long studentId) {
         Student student = getStudentById(studentId);
         return (int) student.getAttendanceRecords().stream()
-            .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
-            .count();
+                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.PRESENT)
+                .count();
     }
 
     public int getMissedClassesCount(Long studentId) {
         Student student = getStudentById(studentId);
         return (int) student.getAttendanceRecords().stream()
-            .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.ABSENT)
-            .count();
+                .filter(record -> record.getStatus() == AttendanceRecord.AttendanceStatus.ABSENT)
+                .count();
     }
 
     public List<String> getTeacherComments(Long studentId) {
         Student student = getStudentById(studentId);
         return student.getAttendanceRecords().stream()
-            .filter(record -> record.getNotes() != null && !record.getNotes().isEmpty())
-            .map(AttendanceRecord::getNotes)
-            .collect(Collectors.toList());
+                .filter(record -> record.getNotes() != null && !record.getNotes().isEmpty())
+                .map(AttendanceRecord::getNotes)
+                .collect(Collectors.toList());
     }
 
     public List<String> getAreasForImprovement(Long studentId) {
@@ -789,10 +853,10 @@ public class StudentService {
 
         // Check subject-wise performance
         Map<String, Double> subjectAverages = student.getMarks().stream()
-            .collect(Collectors.groupingBy(
-                SubjectMark::getSubject,
-                Collectors.averagingDouble(SubjectMark::getMarks)
-            ));
+                .collect(Collectors.groupingBy(
+                        SubjectMark::getSubject,
+                        Collectors.averagingDouble(SubjectMark::getMarks)
+                ));
 
         subjectAverages.forEach((subject, average) -> {
             if (average < 50.0) {

@@ -2,6 +2,7 @@ package com.gk.controller;
 
 import com.gk.model.Student;
 import com.gk.model.SubjectMark;
+import com.gk.service.CourseService;
 import com.gk.service.StudentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +23,11 @@ import java.util.Map;
 @RequestMapping("/students")
 public class StudentViewController {
     private final StudentService studentService;
+    private final CourseService courseService;
 
-    public StudentViewController(StudentService studentService) {
+    public StudentViewController(StudentService studentService, CourseService courseService) {
         this.studentService = studentService;
+        this.courseService = courseService;
     }
 
     // Basic Student Management
@@ -122,6 +125,7 @@ public class StudentViewController {
         model.addAttribute("gradeDistribution", studentService.getGradeDistribution());
         model.addAttribute("attendanceTrend", studentService.getAttendanceTrend());
         model.addAttribute("topPerformers", studentService.getTopPerformers(5));
+        model.addAttribute("totalCourses", courseService.getAllCourses().size());
         return "students/dashboard";
     }
 
@@ -205,6 +209,17 @@ public class StudentViewController {
     }
 
     // Reports
+    @GetMapping("/reports")
+    public String showReportsOverview(Model model) {
+        List<Student> students = studentService.getAllStudents();
+        model.addAttribute("students", students);
+        model.addAttribute("totalStudents", students.size());
+        model.addAttribute("averageAttendance", studentService.getAverageAttendance());
+        model.addAttribute("averageGrade", studentService.getAverageGrade());
+        model.addAttribute("gradeDistribution", studentService.getGradeDistribution());
+        return "students/reports";
+    }
+
     @GetMapping("/{id}/report")
     public String showStudentReport(@PathVariable Long id, Model model) {
         Student student = studentService.getStudentById(id);
@@ -227,12 +242,22 @@ public class StudentViewController {
         return "students/batch";
     }
 
-    @PostMapping("/batch/grade")
-    public String updateGradeBatch(@RequestParam List<Long> studentIds,
-                                   @RequestParam String grade,
-                                   RedirectAttributes redirectAttributes) {
-        studentService.updateGradeBatch(studentIds, grade);
-        redirectAttributes.addFlashAttribute("message", "Grades updated successfully!");
+    @PostMapping("/batch/update")
+    public String handleBatchUpdate(@RequestParam List<Long> ids,
+                                  @RequestParam(required = false) String grade,
+                                  @RequestParam String action,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            if ("updateGrade".equals(action) && grade != null && !grade.isEmpty()) {
+                studentService.updateGradeBatch(ids, grade);
+                redirectAttributes.addFlashAttribute("message", "Grades updated successfully!");
+            } else if ("updateAttendance".equals(action)) {
+                studentService.recalculateAttendanceBatch(ids);
+                redirectAttributes.addFlashAttribute("message", "Attendance recalculated successfully!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error processing batch operation: " + e.getMessage());
+        }
         return "redirect:/students/batch";
     }
 
@@ -253,8 +278,11 @@ public class StudentViewController {
     public ResponseEntity<byte[]> exportStudentData() {
         byte[] data = studentService.exportToExcel();
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("application/vnd.ms-excel"));
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         headers.setContentDispositionFormData("filename", "students.xlsx");
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
         return ResponseEntity.ok().headers(headers).body(data);
     }
 }

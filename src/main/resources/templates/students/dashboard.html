@@ -25,6 +25,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/students/batch">Batch Operations</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/courses">Courses</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -52,8 +55,9 @@
             <div class="col-md-3">
                 <div class="card bg-info text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Average Grade</h5>
-                        <h2 class="card-text" th:text="${#numbers.formatDecimal(averageGrade, 1, 1)}">0.0</h2>
+                        <h5 class="card-title">Total Courses</h5>
+                        <h2 class="card-text" th:text="${totalCourses}">0</h2>
+                        <a href="/courses" class="btn btn-light btn-sm mt-2">Manage Courses</a>
                     </div>
                 </div>
             </div>
